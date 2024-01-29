@@ -8,25 +8,25 @@
 
 ```json
 {
-    "version": 2,
-    "name": "nest-fastify-template",
-    "builds": [
-        {
-            "src": "dist/main.js",
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "dist/main.js"
-        }
-    ]
+  "version": 2,
+  "name": "nest-fastify-template",
+  "builds": [
+    {
+      "src": "dist/main.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/main.js"
+    }
+  ]
 }
 
 ```
 
-推送到github
+推送项目到github
 
 
 
