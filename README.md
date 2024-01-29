@@ -38,6 +38,41 @@
 
 
 
+### 使用fastify
+
+相比较于`express`,`fastify`更快,更优秀,所以使用`fastify`做底层框架,适配参考: [传送门](https://nest.nodejs.cn/techniques/performance#%E6%80%A7%E8%83%BD%EF%BC%88fastify%EF%BC%89)
+
+安装依赖包: 
+
+```
+pnpm add @nestjs/platform-fastify
+```
+
+更新`main.ts`文件
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
+  //默认127.0.0.1本地调用
+  await app.listen(8888);
+  //局域网内其他小伙伴也可以调用,代码如下
+  // await app.listen(8888, '0.0.0.0');
+}
+bootstrap();
+```
+
+至此,适配`fastify`就完成了
+
 
 
 
