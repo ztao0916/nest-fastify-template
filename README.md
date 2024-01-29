@@ -34,9 +34,9 @@
 
 然后使用`cloudflare`绑定域名即可
 
-```
-R7CPrJ6ropEczQWe4uMz7TO7
-```
+以后部署就按这个逻辑来即可,不需要`github Action`自动部署
+
+
 
 
 
