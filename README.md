@@ -34,6 +34,10 @@
 
 然后使用`cloudflare`绑定域名即可
 
+```
+R7CPrJ6ropEczQWe4uMz7TO7
+```
+
 
 
 
