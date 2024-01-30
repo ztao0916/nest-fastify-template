@@ -75,6 +75,134 @@ bootstrap();
 
 
 
+### 版本控制
+
+使用命令`nest g res user`创建`user`模块作为通用模板的使用模块
+
+具体的版本控制方式有哪些以及细节请参考文档: [传送门](https://nest.nodejs.cn/techniques/versioning#%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6),这里只纪录常规用法
+
+#### 全局版本(使用)
+
+在使用的过程中一般采用全局版本,`main.ts`更改如下如下
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
+  //版本控制
+  app.enableVersioning({
+    type: VersioningType.URI, //URI版本控制类型
+    // defaultVersion: '1', //默认版本v1, /v1/user可以请求成功,/user请求失败
+    defaultVersion: [VERSION_NEUTRAL, '1'], //默认版本v1和中性版本(指不带版本号的请求),/v1/user和/user都可以请求成功
+  });
+  //默认127.0.0.1本地调用
+  await app.listen(8888);
+  //局域网内其他小伙伴也可以调用,代码如下
+  // await app.listen(8888, '0.0.0.0');
+}
+bootstrap();
+```
+
+#### 控制器版本(了解)
+
+**该模式很少使用,优先级高于全局默认版本**
+
+字面理解,`xxx.controller.ts`文件内添加版本,举例`user.controller.ts`如下:
+
+```typescript
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+import { UserService } from './user.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+
+@Controller({
+  path: 'user',
+  version: '2',
+})
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  // 默认user请求,不做更改
+  @Get()
+  findAll() {
+    return 'nest-fastify-template部署成功！首页重定向到user页面';
+  }
+
+  //params参数,获取id
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(+id);
+  }
+
+  @Post()
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.userService.create(createUserDto);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(+id, updateUserDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(+id);
+  }
+}
+```
+
+在`@Controller`那里做了变更,访问只能通过携带v2参数,即`http://localhost:8888/v2/user`这样的链接才可以
+
+#### 路由版本(了解)
+
+**该模式很少使用,优先级高于控制器版本**
+
+在`user.controller.ts`中新增代码
+
+```typescript
+@Version('3')
+@Get('cats')
+findV3(): string {
+    return '验证v3';
+}
+```
+
+使用`http://localhost:8888/v1/user/cats`访问报错
+
+```json
+{
+    "message": "Cannot GET /v1/user/cats",
+    "error": "Not Found",
+    "statusCode": 404
+}
+```
+
+使用`http://localhost:8888/v3/user/cats`访问,正确返回`验证v3`的结果
+
+
+
+
+
+
+
 
 
 
