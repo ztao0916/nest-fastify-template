@@ -34,9 +34,9 @@
 
 然后使用`cloudflare`绑定域名即可
 
-以后部署就按这个逻辑来即可,不需要`github Action`自动部署
+在`vercel`后台管理那里,关联`github`项目,然后把`github`自动生成的域名绑定上去
 
-
+以后每次提交代码到`github`上,`vercel`都会自动更新代码
 
 ### 使用fastify
 
