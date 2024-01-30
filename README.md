@@ -199,11 +199,88 @@ findV3(): string {
 
 
 
+### 热重载
 
+会用即可,仅用于本地开发环境
 
+文档: [传送门](https://nest.nodejs.cn/recipes/hot-reload#%E7%83%AD%E9%87%8D%E8%BD%BD)
 
+安装依赖包
 
+```javascript
+pnpm add webpack-node-externals run-script-webpack-plugin webpack -D
+```
 
+安装完成后,在应用的根目录中创建一个 `webpack-hmr.config.js` 文件,内容如下
+
+```javascript
+import nodeExternals from 'webpack-node-externals';
+import { RunScriptWebpackPlugin } from 'run-script-webpack-plugin';
+
+export default function (options, webpack) {
+  return {
+    ...options,
+    entry: ['webpack/hot/poll?100', options.entry],
+    externals: [
+      nodeExternals({
+        allowlist: ['webpack/hot/poll?100'],
+      }),
+    ],
+    plugins: [
+      ...options.plugins,
+      new webpack.HotModuleReplacementPlugin(),
+      new webpack.WatchIgnorePlugin({
+        paths: [/\.js$/, /\.d\.ts$/],
+      }),
+      new RunScriptWebpackPlugin({
+        name: options.output.filename,
+        autoRestart: false,
+      }),
+    ],
+  };
+}
+```
+
+要启用 HMR,请打开应用入口文件（`main.ts`）并添加以下 webpack 相关指令
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import { AppModule } from './app.module';
+
+declare const module: any;
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
+  //版本控制
+  app.enableVersioning({
+    type: VersioningType.URI, //URI版本控制类型
+    // defaultVersion: '1', //默认版本v1
+    defaultVersion: [VERSION_NEUTRAL, '1'], //默认版本v1和中性版本,中性版本是指不带版本号的请求
+  });
+
+  //热重载
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
+
+  //默认127.0.0.1本地调用
+  await app.listen(8888);
+  //局域网内其他小伙伴也可以调用,代码如下
+  // await app.listen(8888, '0.0.0.0');
+}
+bootstrap();
+```
+
+OK,热重载已实现
 
 
 
