@@ -1,7 +1,7 @@
 /*
  * @Author: ztao
  * @Date: 2024-01-29 21:48:36
- * @LastEditTime: 2024-02-01 22:19:30
+ * @LastEditTime: 2024-02-01 22:43:46
  * @Description:
  */
 import { NestFactory } from '@nestjs/core';
@@ -11,7 +11,9 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
-import { TransformInterceptor } from '@/common/interceptor/transform.interceptor';
+import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from '@/common/exceptions/http-exception.filter';
+import { AllExceptionsFilter } from '@/common/exceptions/all-exception.filter';
 
 declare const module: any;
 
@@ -29,6 +31,10 @@ async function bootstrap() {
 
   //绑定拦截器
   app.useGlobalInterceptors(new TransformInterceptor()); //全局响应拦截器
+
+  //绑定过滤器
+  app.useGlobalFilters(new HttpExceptionFilter()); //全局http异常过滤器
+  app.useGlobalFilters(new AllExceptionsFilter()); //全局所有异常过滤器
 
   //热重载
   if (module.hot) {

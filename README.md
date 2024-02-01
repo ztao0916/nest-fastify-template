@@ -302,7 +302,7 @@ OK,热重载已实现
 }
 ```
 
-创建`src/common/interceptor/transform.interceptor.ts`文件,内容如下
+创建`src/common/interceptors/transform.interceptor.ts`文件,内容如下
 
 ```typescript
 import {
@@ -333,14 +333,103 @@ export class TransformInterceptor<T>
 }
 ```
 
-在`main.ts`中引入并且新增代码如下
+在`main.ts`中引入并且新增代码如下,即可实现统一返参
 
 ```typescript
  //绑定拦截器
  app.useGlobalInterceptors(new TransformInterceptor()); //全局响应拦截器
 ```
 
+按部就班的CV即可解决问题
+
 ### 全局异常拦截
+
+异常过滤器: [传送门](https://nest.nodejs.cn/exception-filters#%E5%BC%82%E5%B8%B8%E8%BF%87%E6%BB%A4%E5%99%A8)
+
+```typescript
+//基本描述
+Nest 带有一个内置的异常层，负责处理应用中所有未处理的异常。当你的应用代码未处理异常时，该层会捕获该异常，然后自动发送适当的用户友好响应
+```
+
+装饰器`@Catch`传参问题注意下
+
+新增文件`src/common/exceptions/all-exception.filter.ts`和`src/common/exceptions/http-exception.filter.ts`,内容如下
+
+
+
+```typescript
+//http-exception.filter.ts
+import { FastifyReply, FastifyRequest } from 'fastify';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+} from '@nestjs/common';
+
+@Catch(HttpException)
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<FastifyReply>();
+    const request = ctx.getRequest<FastifyRequest>();
+    const status = exception.getStatus();
+
+    //fastify需要使用send方法
+    response.status(status).send({
+      code: status,
+      timestamp: new Date().toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+      }),
+      data: {},
+      path: request.url,
+      message: exception.message,
+    });
+  }
+}
+```
+
+
+
+```typescript
+//all-exception.filter.ts
+import { FastifyReply, FastifyRequest } from 'fastify';
+
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpStatus,
+} from '@nestjs/common';
+
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
+  catch(exception: Error, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<FastifyReply>();
+    const request = ctx.getRequest<FastifyRequest>();
+
+    //! 非 HTTP 标准异常的处理
+    response.status(HttpStatus.SERVICE_UNAVAILABLE).send({
+      code: HttpStatus.SERVICE_UNAVAILABLE,
+      timestamp: new Date().toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+      }),
+      path: request.url,
+      message: exception.message,
+      data: {},
+    });
+  }
+}
+```
+
+在`main.ts`中引入,并新增代码如下,即可实现异常拦截
+
+```typescript
+//绑定过滤器
+app.useGlobalFilters(new HttpExceptionFilter()); //全局http异常过滤器
+app.useGlobalFilters(new AllExceptionsFilter()); //全局所有异常过滤器
+```
 
 
 
@@ -348,9 +437,13 @@ export class TransformInterceptor<T>
 
 ### 记录日志
 
+### 数据库连接
+
+### 共享模块
+
 ### 接口文档
 
-### 数据库连接
+
 
 
 
