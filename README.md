@@ -435,6 +435,81 @@ app.useGlobalFilters(new AllExceptionsFilter()); //全局所有异常过滤器
 
 ### 环境变量
 
+文档:[传送门](https://nest.nodejs.cn/techniques/configuration#%E9%85%8D%E7%BD%AE)
+
+安装依赖(`@nestjs/config` 包内部使用 dotenv)
+
+```ts
+pnpm add @nestjs/config
+```
+
+更改`app.module.ts`文件
+
+```typescript
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from '@/app.controller';
+import { UserModule } from '@/user/user.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, //全局使用
+      envFilePath: '.dev.env', //也可以接收数组,根据proccess.env.NODE_ENV判断加载什么文件
+    }),
+    UserModule,
+  ],
+  controllers: [AppController],
+})
+export class AppModule {}
+```
+
+在根目录创建`.dev.env`文件,添加内容如下
+
+```
+NODE_ENV="dev"   #环境
+
+FEISHU_URL='https://open.feishu.cn/open-apis' #飞书请求url
+FEISHU_API_HOST='https://open.feishu.cn' #飞书请求主机
+```
+
+安装依赖
+
+```
+pnpm add cross-env
+```
+
+修改`package.json`文件启动命令
+
+```
+"start:dev": "cross-env RUN_ENV=dev nest start --watch",
+```
+
+在`user.controller.ts`中引入,新增代码如下
+
+```typescript
+//引入文件
+...
+import { ConfigService } from '@nestjs/config';
+
+...
+//构造器
+constructor(
+    private readonly userService: UserService,
+    private readonly configService: ConfigService,
+  ) {}
+
+...
+// 默认user请求,不做更改
+  @Get()
+  findAll() {
+    console.log(this.configService.get('FEISHU_URL'));
+    return 'user模块,默认请求';
+  }
+```
+
+调用接口就可以获得环境变量
+
 ### 记录日志
 
 ### 数据库连接

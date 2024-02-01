@@ -1,3 +1,9 @@
+/*
+ * @Author: ztao
+ * @Date: 2024-01-30 10:02:10
+ * @LastEditTime: 2024-02-01 22:56:37
+ * @Description:
+ */
 import {
   Controller,
   Get,
@@ -11,16 +17,21 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Controller({
   path: 'user',
 })
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly configService: ConfigService,
+  ) {}
 
   // 默认user请求,不做更改
   @Get()
   findAll() {
+    console.log(this.configService.get('FEISHU_URL'));
     return 'user模块,默认请求';
   }
 
