@@ -1,7 +1,7 @@
 /*
  * @Author: ztao
  * @Date: 2024-01-29 21:48:36
- * @LastEditTime: 2024-01-30 19:53:06
+ * @LastEditTime: 2024-02-01 22:19:30
  * @Description:
  */
 import { NestFactory } from '@nestjs/core';
@@ -11,6 +11,7 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
+import { TransformInterceptor } from '@/common/interceptor/transform.interceptor';
 
 declare const module: any;
 
@@ -25,6 +26,9 @@ async function bootstrap() {
     // defaultVersion: '1', //默认版本v1
     defaultVersion: [VERSION_NEUTRAL, '1'], //默认版本v1和中性版本,中性版本是指不带版本号的请求
   });
+
+  //绑定拦截器
+  app.useGlobalInterceptors(new TransformInterceptor()); //全局响应拦截器
 
   //热重载
   if (module.hot) {

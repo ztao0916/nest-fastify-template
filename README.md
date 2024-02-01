@@ -284,6 +284,76 @@ OK,热重载已实现
 
 
 
+### 统一全局返参
+
+需要使用拦截器,文档关于拦截器:[传送门](https://nest.nodejs.cn/interceptors#%E6%8B%A6%E6%88%AA%E5%99%A8)的介绍如下图
+
+![](https://cdn.jsdelivr.net/gh/ztao0916/image@main/img/20240201215216.png)
+
+参考拦截器的响应映射.
+
+这里的返回结构和公司的接口返回结构一致,如下:
+
+```json
+{
+   data, // 数据
+   message: 'success', // 异常信息
+   code：'0000' // 接口业务返回状态,0000和9999
+}
+```
+
+创建`src/common/interceptor/transform.interceptor.ts`文件,内容如下
+
+```typescript
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+export interface Response<T> {
+  data: T;
+}
+
+@Injectable()
+export class TransformInterceptor<T>
+  implements NestInterceptor<T, Response<T>>
+{
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<Response<T>> {
+    return next
+      .handle()
+      .pipe(map((data) => ({ code: '0000', message: '请求成功', data })));
+  }
+}
+```
+
+在`main.ts`中引入并且新增代码如下
+
+```typescript
+ //绑定拦截器
+ app.useGlobalInterceptors(new TransformInterceptor()); //全局响应拦截器
+```
+
+### 全局异常拦截
+
+
+
+### 环境变量
+
+### 记录日志
+
+### 接口文档
+
+### 数据库连接
+
+
+
 
 
 
