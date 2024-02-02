@@ -296,9 +296,9 @@ OK,热重载已实现
 
 ```json
 {
-   data, // 数据
-   message: 'success', // 异常信息
-   code：'0000' // 接口业务返回状态,0000和9999
+    data, // 数据
+    message: 'success', // 异常信息
+    code: '0000' // 接口业务返回状态,0000和9999
 }
 ```
 
@@ -512,9 +512,21 @@ constructor(
 
 ### 记录日志
 
-### 数据库连接
+中文文档: [传送门](https://nest.nodejs.cn/techniques/logger#%E6%97%A5%E5%BF%97),了解即可,基本上不用默认日志
 
-### 共享模块
+脚手架模板使用外部日志`winston`
+
+安装依赖包
+
+```typescript
+pnpm add winston winston-daily-rotate-file
+```
+
+
+
+### 共享模块整合
+
+### 数据库连接
 
 ### 接口文档
 
