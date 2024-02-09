@@ -522,9 +522,142 @@ constructor(
 pnpm add winston winston-daily-rotate-file
 ```
 
+创建`shared`模块,主要是存放共享的资源代码,如日志,数据库等
 
+```
+nest g mo shared
+```
 
-### 共享模块整合
+创建日志模块
+
+```
+nest g mo shared/logger
+nest g s shared/logger
+```
+
+如果想在其他模块中引入`logger`模块,那么必须必须导出`loggerService`,更新`logger.module.ts`代码,如下:
+
+```typescript
+import { Module } from '@nestjs/common';
+import { LoggerService } from './logger.service';
+
+@Module({
+  providers: [LoggerService],
+  exports: [LoggerService],
+})
+export class LoggerModule {}
+```
+
+更新`logger.module.ts`的代码,如下
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import * as winston from 'winston';
+import * as DailyRotateFile from 'winston-daily-rotate-file';
+
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  // winston.format.simple(), //生成简单的日志输出,返回格式 = info : 信息 {"timestamp":"2024-01-23 17:23:20"}
+  winston.format.prettyPrint(), //生成格式化的,易于阅读的日志输出,返回格式 = { level: 'info', message: '信息', timestamp: '2024-01-23 17:24:14' },这个更方便查看
+);
+
+//开发环境只需要控制台输出,生产环境需要控制台和文件同时输出
+//对每个日志级别创建一个日志记录器
+const transports = [
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      winston.format.prettyPrint(),
+    ),
+  }), //控制台输出
+  new DailyRotateFile({
+    dirname: 'logs/info', //日志文件夹
+    filename: '%DATE%.info.log', //基于日期模式滚动日志文件名
+    datePattern: 'YYYY-MM-DD', //每天创建一个新的日志文件
+    zippedArchive: true, //是否压缩,是
+    maxSize: '10m', //单个文件最大10M
+    maxFiles: '7d', // 保存7天
+    level: 'info',
+  }),
+  new DailyRotateFile({
+    dirname: 'logs/error', //日志文件夹
+    filename: '%DATE%.error.log',
+    datePattern: 'YYYY-MM-DD',
+    zippedArchive: true,
+    maxSize: '10m',
+    maxFiles: '7d',
+    level: 'error',
+  }),
+  //如果需要,为其他日志级别添加类似的传输,比如warn,debug
+];
+
+const logger = winston.createLogger({
+  format: logFormat,
+  transports,
+});
+
+@Injectable()
+export class LoggerService {
+  info(message: string) {
+    logger.info('info', message);
+  }
+
+  error(message: string) {
+    logger.error(message);
+  }
+
+  warn(message: string) {
+    logger.warn(message);
+  }
+
+  debug(message: string) {
+    logger.debug(message);
+  }
+}
+
+```
+
+更新`shared.module.ts`文件,因为`SharedModule`也需要在其他模块中使用,所以增加导出`loggerService`
+
+在`user`模块中使用如下:
+
+首先在`user.module.ts`中引入`SharedModule`,更新代码如下:
+
+```typescript
+import { Module } from '@nestjs/common';
+import { UserService } from './user.service';
+import { UserController } from './user.controller';
+import { SharedModule } from '@/shared/shared.module';
+
+@Module({
+  controllers: [UserController],
+  providers: [UserService],
+  imports: [SharedModule],
+})
+export class UserModule {}
+```
+
+然后就可以在`UserController`模块中使用`LoggerService`了,效果如下:
+
+```typescript
+....
+import { LoggerService } from '@/shared/logger/logger.service';
+...
+constructor(
+    private readonly userService: UserService,
+    private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
+  ) {}
+
+ @Get()
+  findAll() {
+    console.log(this.configService.get('FEISHU_URL'));
+    this.logger.info('user模块,默认请求');
+    return 'user模块,默认请求';
+  }
+```
+
+调用接口`/v1/user`即可在根目录生成对应的日志文件夹
 
 ### 数据库连接
 
