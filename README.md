@@ -663,6 +663,104 @@ constructor(
 
 ### 接口文档
 
+文档地址: [传送门](https://nest.nodejs.cn/openapi/introduction)
+
+首先按照依赖包
+
+```
+pnpm add @nestjs/swagger
+```
+
+在`main.ts`中使用`swaggerModule`
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from '@/common/exceptions/http-exception.filter';
+import { AllExceptionsFilter } from '@/common/exceptions/all-exception.filter';
+
+declare const module: any;
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
+  //版本控制
+  app.enableVersioning({
+    type: VersioningType.URI, //URI版本控制类型
+    // defaultVersion: '1', //默认版本v1
+    defaultVersion: [VERSION_NEUTRAL, '1'], //默认版本v1和中性版本,中性版本是指不带版本号的请求
+  });
+  //接口文档
+  const config = new DocumentBuilder()
+    .setTitle('通用模板API')
+    .setDescription('通用模块接口文档')
+    .setVersion('1.0')
+    .addTag('common')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
+  //绑定拦截器
+  app.useGlobalInterceptors(new TransformInterceptor()); //全局响应拦截器
+
+  //绑定过滤器
+  app.useGlobalFilters(new HttpExceptionFilter()); //全局http异常过滤器
+  app.useGlobalFilters(new AllExceptionsFilter()); //全局所有异常过滤器
+
+  //热重载
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
+
+  //默认127.0.0.1本地调用
+  await app.listen(8888);
+  //局域网内其他小伙伴也可以调用,代码如下
+  // await app.listen(8888, '0.0.0.0');
+}
+bootstrap();
+
+```
+
+此时访问`8888/api`会报错,查看控制台,提示缺少依赖包`@fastify/static`,安装后访问地址即可成功
+
+因为版本控制问题,接口文档看着会有点怪,只保留v1版本,其他版本暂不需要
+
+![](https://cdn.jsdelivr.net/gh/ztao0916/image@main/img/202402151023498.png)
+
+
+
+这样改完以后接口文档就会正常展示了,但是还有一些问题,公共模块我是不希望再接口文档里看到的,所以我需要在`main.ts`中增加一些代码如下:
+
+```typescript
+//跟在接口文档后面,tag是common/shared,就不生成接口文档
+//排除指定模块,不生成接口文档,common和shared模块不生成接口文档
+  document.tags = document.tags.filter(
+    (tag) => !tag.name.includes('common') && !tag.name.includes('shared'),
+  );
+```
+
+然后还有一个问题,`user`模块在接口文档里的tag是default,这个需要更改一下,找到`user.controller.ts`,然后增加代码如下,这里使用的装饰器是`ApiTags`
+
+```typescript
+...
+import { ApiTags } from '@nestjs/swagger';
+...
+@ApiTags('default') // 修改这里的标签名称为 'user'
+@Controller(...)
+```
+
+`app.controller.ts`也要做对应的修改即可
+
 
 
 

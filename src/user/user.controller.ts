@@ -1,25 +1,17 @@
 /*
  * @Author: ztao
  * @Date: 2024-01-30 10:02:10
- * @LastEditTime: 2024-02-08 17:08:02
+ * @LastEditTime: 2024-02-15 10:37:01
  * @Description:
  */
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Version,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@/shared/logger/logger.service';
 
+@ApiTags('user') // 修改这里的标签名称为 'user'
 @Controller({
   path: 'user',
 })
@@ -38,12 +30,6 @@ export class UserController {
     return 'user模块,默认请求';
   }
 
-  @Version('3')
-  @Get('cats')
-  findV3(): string {
-    return '验证v3';
-  }
-
   //params参数,获取id
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -53,11 +39,6 @@ export class UserController {
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
   }
 
   @Delete(':id')

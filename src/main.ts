@@ -1,7 +1,7 @@
 /*
  * @Author: ztao
  * @Date: 2024-01-29 21:48:36
- * @LastEditTime: 2024-02-01 22:43:46
+ * @LastEditTime: 2024-02-15 10:32:06
  * @Description:
  */
 import { NestFactory } from '@nestjs/core';
@@ -10,6 +10,7 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '@/common/exceptions/http-exception.filter';
@@ -25,9 +26,22 @@ async function bootstrap() {
   //版本控制
   app.enableVersioning({
     type: VersioningType.URI, //URI版本控制类型
-    // defaultVersion: '1', //默认版本v1
-    defaultVersion: [VERSION_NEUTRAL, '1'], //默认版本v1和中性版本,中性版本是指不带版本号的请求
+    defaultVersion: '1', //默认版本v1
+    // defaultVersion: [VERSION_NEUTRAL, '1'], //默认版本v1和中性版本,中性版本是指不带版本号的请求
   });
+  //接口文档
+  const config = new DocumentBuilder()
+    .setTitle('通用模板API')
+    .setDescription('通用模块接口文档')
+    .setVersion('1.0')
+    .addTag('common')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  //排除指定模块,不生成接口文档,common和shared模块不生成接口文档
+  document.tags = document.tags.filter(
+    (tag) => !tag.name.includes('common') && !tag.name.includes('shared'),
+  );
+  SwaggerModule.setup('api', app, document);
 
   //绑定拦截器
   app.useGlobalInterceptors(new TransformInterceptor()); //全局响应拦截器
