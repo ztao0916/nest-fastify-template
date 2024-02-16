@@ -1,11 +1,11 @@
 /*
  * @Author: ztao
  * @Date: 2024-01-29 21:48:36
- * @LastEditTime: 2024-02-15 10:32:06
+ * @LastEditTime: 2024-02-16 09:07:29
  * @Description:
  */
 import { NestFactory } from '@nestjs/core';
-import { VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
+import { VersioningType } from '@nestjs/common';
 import {
   FastifyAdapter,
   NestFastifyApplication,

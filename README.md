@@ -561,7 +561,7 @@ const logFormat = winston.format.combine(
   winston.format.prettyPrint(), //生成格式化的,易于阅读的日志输出,返回格式 = { level: 'info', message: '信息', timestamp: '2024-01-23 17:24:14' },这个更方便查看
 );
 
-//开发环境只需要控制台输出,生产环境需要控制台和文件同时输出
+//开发环境只需要控制台输出,生产环境需要控制台和文件同时输出,process.env控制
 //对每个日志级别创建一个日志记录器
 const transports = [
   new winston.transports.Console({
@@ -660,6 +660,14 @@ constructor(
 调用接口`/v1/user`即可在根目录生成对应的日志文件夹
 
 ### 数据库连接
+
+```
+数据库这块接触的不多,需要新的学习,代码也会放在共享模块里
+```
+
+#### redis
+
+这里使用的是ioredis,
 
 ### 接口文档
 
@@ -761,7 +769,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 `app.controller.ts`也要做对应的修改即可
 
-
+接口的注释还有字段校验,在写具体接口的时候,借助`chatGPT`在做学习
 
 
 
