@@ -7,9 +7,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from './logger/logger.module';
 import { CacheModule } from './cache/cache.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [LoggerModule, CacheModule],
-  exports: [LoggerModule, CacheModule],
+  imports: [LoggerModule, CacheModule, PrismaModule],
+  exports: [LoggerModule, CacheModule, PrismaModule],
 })
 export class SharedModule {}

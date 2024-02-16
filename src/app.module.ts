@@ -1,7 +1,7 @@
 /*
  * @Author: ztao
  * @Date: 2024-01-29 21:48:36
- * @LastEditTime: 2024-02-01 22:51:23
+ * @LastEditTime: 2024-02-16 19:09:14
  * @Description:
  */
 import { Module } from '@nestjs/common';
@@ -14,7 +14,7 @@ import { SharedModule } from './shared/shared.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, //全局使用
-      envFilePath: '.dev.env', //也可以接收数组,根据proccess.env.NODE_ENV判断加载什么文件
+      envFilePath: ['.dev.env', '.env'], //可以接收数组或者字符串,根据proccess.env.NODE_ENV判断加载什么文件
     }),
     UserModule,
     SharedModule,
