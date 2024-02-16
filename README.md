@@ -667,7 +667,123 @@ constructor(
 
 #### redis
 
-这里使用的是ioredis,
+这里使用的是ioredis,首先安装依赖
+
+```
+pnpm add ioredis
+```
+
+然后创建缓存模块
+
+```
+nest g s shared/cache
+nest g mo shared/cache
+```
+
+在`.dev.env`文件中新增环境变量,密码主机还有端口一定要正确
+
+```yaml
+#redis相关变量
+REDIS_HOST = '' #redis主机名
+REDIS_PORT = '' #redis端口
+REDIS_USER = '' #redis用户名
+REDIS_PASSWORD = '' #redis密码
+REDIS_DB = '' #redis数据库
+```
+
+然后更新`cache.service.ts`文件,内容如下:
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import Redis from 'ioredis';
+import { ConfigService } from '@nestjs/config';
+
+@Injectable()
+export class CacheService {
+  //定义redis客户端,属性前面加上private，表示这个属性只能在类的内部访问，外部不能访问
+  private readonly redis: Redis;
+  constructor(private readonly configService: ConfigService) {
+    console.log('redis连接中', this.configService);
+    //创建redis链接,这里的配置可以写在环境变量中
+    this.redis = new Redis({
+      host: this.configService.get('REDIS_HOST'), // Redis 服务器的主机名
+      port: this.configService.get('REDIS_PORT'), // Redis 服务器的端口
+      username: this.configService.get('REDIS_USER'), // needs Redis >= 6
+      password: this.configService.get('REDIS_PASSWORD'), // Redis 服务器的密码
+      db: this.configService.get('REDIS_DB'), // 使用的数据库索引
+    });
+    console.log('redis连接成功');
+  }
+
+  /**
+   * @description: 设置缓存
+   * @param {string} key 缓存key
+   * @param {string} value 缓存value
+   * @param {number} seconds 缓存时间-秒
+   * @return {*} 返回值
+   */
+  async set(key: string, value: string, seconds?: number) {
+    if (!seconds) {
+      return await this.redis.set(key, value);
+    } else {
+      const result = await this.redis.set(key, value, 'EX', seconds);
+      return result;
+    }
+  }
+
+  /**
+   * @description: 获取缓存
+   * @param {string} key 缓存key
+   * @return {*} 返回值
+   */
+  get(key: string) {
+    return this.redis.get(key);
+  }
+
+  /**
+   * @description: 删除缓存
+   * @param {string} key 缓存key
+   * @return {*} 返回值
+   */
+  del(key: string) {
+    return this.redis.del(key);
+  }
+
+  //清除所有缓存
+  flushAll() {
+    return this.redis.flushall();
+  }
+}
+```
+
+继续更新`catch.module.ts`文件,代码如下:
+
+```typescript
+import { Module } from '@nestjs/common';
+import { CacheService } from './cache.service';
+
+@Module({
+  providers: [CacheService],
+  exports: [CacheService],
+})
+export class CacheModule {}
+```
+
+最后更新`shared.module.ts`文件
+
+```typescript
+import { Module } from '@nestjs/common';
+import { LoggerModule } from './logger/logger.module';
+import { CacheModule } from './cache/cache.module';
+
+@Module({
+  imports: [LoggerModule, CacheModule],
+  exports: [LoggerModule, CacheModule],
+})
+export class SharedModule {}
+```
+
+此时就可以像`LoggerService`一样,直接在`UserController`模块引用了
 
 ### 接口文档
 
