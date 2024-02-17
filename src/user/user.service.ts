@@ -1,29 +1,20 @@
 /*
  * @Author: ztao
  * @Date: 2024-01-30 00:24:17
- * @LastEditTime: 2024-02-16 22:23:09
+ * @LastEditTime: 2024-02-17 16:27:45
  * @Description: 和数据库交互的服务层
  */
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
-  create(data: Prisma.UserCreateInput) {
-    return this.prisma.user.create({
-      data,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    });
+  constructor() {}
+  create(data) {
+    return `新增数据${JSON.stringify(data)}`;
   }
 
   findAll() {
-    return this.prisma.user.findMany();
+    return '查询所有数据';
   }
 
   findOne(id: number) {
